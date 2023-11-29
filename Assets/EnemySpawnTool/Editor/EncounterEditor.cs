@@ -1,4 +1,5 @@
-﻿using EnemySpawnTool.Runtime;
+﻿using System;
+using EnemySpawnTool.Runtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,7 +13,18 @@ namespace EnemySpawnTool.Editor
         
         private Trigger _selectedTrigger;
         private Wave _selectedWave;
-        
+
+        private SerializedProperty _triggersProp;
+        private SerializedProperty _wavesProp;
+        private SerializedProperty _triggerWaveMapProp;
+
+        private void OnEnable()
+        {
+            _triggersProp = serializedObject.FindProperty("triggers");
+            _wavesProp = serializedObject.FindProperty("waves");
+            _triggerWaveMapProp = serializedObject.FindProperty("TriggerWaveMap");
+        }
+
         public override void OnInspectorGUI()
         {
             Encounter encounter = (Encounter)target;
@@ -42,7 +54,8 @@ namespace EnemySpawnTool.Editor
                     _waveContainer = new GameObject("WaveContainer");
                     _waveContainer.transform.SetParent(encounter.transform);
                 }
-                encounter.AddWave(_selectedWave, _selectedTrigger);
+                
+                encounter.AddWave(_waveContainer.GetComponent<Wave>(), _selectedTrigger);
             }
 
             // Display triggers
