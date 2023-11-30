@@ -10,7 +10,8 @@ namespace EnemySpawnTool.Runtime
         public List<SpawnPoint> spawnPoints;
         internal int EnemiesAlive;
         internal bool HardMode;
-        private float _timer;
+        [SerializeField]
+        public float timer;
         private bool _spawnCompleted;
         internal bool WaveDefeated;
 
@@ -24,7 +25,7 @@ namespace EnemySpawnTool.Runtime
 
         internal void SpawnWave()
         {
-            if (_timer <= 0f)
+            if (timer <= 0f)
             {
                 if(HardMode)
                 {
@@ -39,13 +40,14 @@ namespace EnemySpawnTool.Runtime
             }
             else
             {
-                StartCoroutine(WaitForTimer(_timer));
+                StartCoroutine(WaitForTimer(timer));
             }
         }
 
         private IEnumerator WaitForTimer(float time)
         {
             yield return new WaitForSeconds(time);
+            timer = 0;
             SpawnWave();
         }
 
@@ -59,7 +61,7 @@ namespace EnemySpawnTool.Runtime
 
         private void SpawnNormalEnemies()
         {
-            foreach (var spawnPoint in spawnPoints.Where(spawnPoint => !spawnPoint.IsHardSpawner))
+            foreach (var spawnPoint in spawnPoints.Where(spawnPoint => !spawnPoint.isHardSpawner))
             {
                 spawnPoint.Spawn();
             }

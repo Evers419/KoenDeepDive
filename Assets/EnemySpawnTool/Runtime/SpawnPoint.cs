@@ -4,9 +4,12 @@ namespace EnemySpawnTool.Runtime
 {
     public class SpawnPoint : MonoBehaviour
     {
-        private GameObject _enemyPrefab;
-        private Wave _wave;
-        internal bool IsHardSpawner;
+        [SerializeField]
+        public GameObject enemyPrefab;
+        [SerializeField]
+        public Wave wave;
+        [SerializeField]
+        public bool isHardSpawner;
         private bool _hasSpawned;
 
         private void Update()
@@ -16,16 +19,20 @@ namespace EnemySpawnTool.Runtime
 
         internal void Spawn()
         {
+            if (_hasSpawned) return;
             var spawnTransform = transform;
-            Instantiate(_enemyPrefab, spawnTransform.position, spawnTransform.rotation, spawnTransform);
+            float prefabHeight = enemyPrefab.GetComponentInChildren<MeshRenderer>().bounds.size.y;
+            var position = spawnTransform.position;
+            Vector3 spawnPosition = new Vector3(position.x, position.y + .5f*prefabHeight, position.z);
+            Instantiate(enemyPrefab, spawnPosition, spawnTransform.rotation, spawnTransform);
             _hasSpawned = true;
-            _wave.EnemiesAlive++;
+            wave.EnemiesAlive++;
         }
 
         private void SpawnDefeated()
         {
             if (!_hasSpawned || transform.childCount != 0) return;
-            _wave.EnemiesAlive--;
+            wave.EnemiesAlive--;
             gameObject.SetActive(false);
         }
     }

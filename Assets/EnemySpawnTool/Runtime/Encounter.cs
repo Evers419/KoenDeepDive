@@ -8,24 +8,32 @@ namespace EnemySpawnTool.Runtime
     public class Encounter : MonoBehaviour
     {
         public List<TriggerWave> triggerWaves = new List<TriggerWave>();
+        private bool _hardMode;
         
         [Serializable]
         public struct TriggerWave
         {
-            public Trigger trigger;
+            public GameObject container;
+            public GameObject trigger;
             public List<Wave> waves;
         }
-        private bool _hardMode;
-
-        public static TriggerWave NewTriggerWave(Trigger trigger, List<Wave> waves)
+        
+        private TriggerWave NewTriggerWave(GameObject trigger, List<Wave> waves)
         {
             TriggerWave triggerWave = new TriggerWave
             {
                 trigger = trigger,
-                waves = waves
+                waves = waves,
+                container = new GameObject("Trigger" + triggerWaves.Count),
             };
+            triggerWave.container.transform.parent = transform;
+            triggerWave.trigger.transform.parent = triggerWave.container.transform;
             return triggerWave;
         }
+        
+        public GameObject triggerPrefab;
+        public GameObject wavePrefab;
+        public GameObject spawnPointPrefab;
 
         private void Awake()
         {
@@ -50,7 +58,7 @@ namespace EnemySpawnTool.Runtime
         {
             foreach (TriggerWave triggerWave in triggerWaves)
             {
-                if (!triggerWave.trigger.HasTriggered) continue;
+                if (!triggerWave.trigger.GetComponent<Trigger>().HasTriggered) continue;
                 foreach (var wave in triggerWave.waves)
                 {
                     if (wave.WaveDefeated) continue;
@@ -60,9 +68,11 @@ namespace EnemySpawnTool.Runtime
             }
         }
 
-        public void AddTrigger(Trigger trigger)
+        public TriggerWave AddTrigger(GameObject trigger)
         {
-            triggerWaves.Add(NewTriggerWave(trigger, new List<Wave>()));
+            TriggerWave newTriggerWave = NewTriggerWave(trigger, new List<Wave>());
+            triggerWaves.Add(newTriggerWave);
+            return newTriggerWave;
         }
 
         public void AddWave(TriggerWave triggerWave, Wave wave)

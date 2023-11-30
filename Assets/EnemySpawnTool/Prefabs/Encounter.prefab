@@ -44,5 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c535fc6d4b6f430dbb8fc24c68b3899c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  triggers: []
-  waves: []
+  triggerWaves: []
+  triggerPrefab: {fileID: 1799013643680109983, guid: 362c92ad816442c4b94aa18e8ecfab48, type: 3}
+  wavePrefab: {fileID: 7717449390161153285, guid: 56f6495c7343fa84da515efb4ead2d71, type: 3}
+  spawnPointPrefab: {fileID: 2469035304400802735, guid: 0792bdaa37fb4f742adecd17a64e373d, type: 3}
