@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.koenevers.enemyspawntool": {
+      "version": "file:../Assets/SpawnTool",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "2.0.7",
       "depth": 0,
