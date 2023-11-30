@@ -1,16 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace EnemySpawnTool.Runtime
 {
     public class Encounter : MonoBehaviour
     {
-        public List<Trigger> triggers;
-        public List<Wave> waves;
-        public Dictionary<Trigger, List<Wave>> TriggerWaveMap = new Dictionary<Trigger, List<Wave>>();
+        public List<TriggerWave> triggerWaves = new List<TriggerWave>();
         
-        private int _currentWaveIndex;
+        [Serializable]
+        public struct TriggerWave
+        {
+            public Trigger trigger;
+            public List<Wave> waves;
+        }
         private bool _hardMode;
+
+        public static TriggerWave NewTriggerWave(Trigger trigger, List<Wave> waves)
+        {
+            TriggerWave triggerWave = new TriggerWave
+            {
+                trigger = trigger,
+                waves = waves
+            };
+            return triggerWave;
+        }
 
         private void Awake()
         {
@@ -25,18 +40,18 @@ namespace EnemySpawnTool.Runtime
         private void SetHardMode()
         {
             _hardMode = true;
-            foreach (var wave in waves)
+            foreach (var wave in triggerWaves.SelectMany(tw => tw.waves))
             {
                 wave.HardMode = _hardMode;
             }
         }
-
+        
         private void CheckTriggers()
         {
-            foreach (var (trigger, waveList) in TriggerWaveMap)
+            foreach (TriggerWave triggerWave in triggerWaves)
             {
-                if (!trigger.HasTriggered) continue;
-                foreach (var wave in waveList)
+                if (!triggerWave.trigger.HasTriggered) continue;
+                foreach (var wave in triggerWave.waves)
                 {
                     if (wave.WaveDefeated) continue;
                     wave.SpawnWave();
@@ -47,12 +62,12 @@ namespace EnemySpawnTool.Runtime
 
         public void AddTrigger(Trigger trigger)
         {
-            TriggerWaveMap[trigger] = new List<Wave>();
+            triggerWaves.Add(NewTriggerWave(trigger, new List<Wave>()));
         }
 
-        public void AddWave(Wave wave, Trigger trigger)
+        public void AddWave(TriggerWave triggerWave, Wave wave)
         {
-            TriggerWaveMap[trigger].Add(wave);
+            triggerWave.waves.Add(wave);
         }
     }
 }

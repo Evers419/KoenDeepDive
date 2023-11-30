@@ -1,5 +1,4 @@
-﻿using System;
-using EnemySpawnTool.Runtime;
+﻿using EnemySpawnTool.Runtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,79 +7,116 @@ namespace EnemySpawnTool.Editor
     [CustomEditor(typeof(Encounter))]
     public class EncounterEditor : UnityEditor.Editor
     {
-        private GameObject _waveContainer;
-        private GameObject _triggerContainer;
         
-        private Trigger _selectedTrigger;
-        private Wave _selectedWave;
+        //TODO bij instantiate methods voeg dingen toe aan list
+        //TODO zorg dat prefabs daadwerkelijk gespawned worden
+        //TODO laat de waves zien als ik op een trigger klik
+        //TODO laat de spawnpoints zien als ik op een wave klik
+        //TODO laat met raycast dingen geplaced worden
+        
+        public GameObject triggerPrefab;
+        public GameObject wavePrefab;
+        public GameObject spawnPointPrefab;
 
-        private SerializedProperty _triggersProp;
-        private SerializedProperty _wavesProp;
-        private SerializedProperty _triggerWaveMapProp;
+        private GameObject _triggerContainer;
+        private GameObject _waveContainer;
+        private GameObject _spawnContainer;
+
+        private Encounter.TriggerWave _selectedTriggerWave;
+        private SerializedProperty _triggerWavesProp;
+        private int _selectedTriggerWaveIndex;
 
         private void OnEnable()
         {
-            _triggersProp = serializedObject.FindProperty("triggers");
-            _wavesProp = serializedObject.FindProperty("waves");
-            _triggerWaveMapProp = serializedObject.FindProperty("TriggerWaveMap");
+            _triggerWavesProp = serializedObject.FindProperty("triggerWaves");
+            SceneView.duringSceneGui += OnSceneGUI;
         }
 
+        private void OnDisable()
+        {
+            SceneView.duringSceneGui -= OnSceneGUI;
+        }
+
+        // ReSharper disable once Unity.IncorrectMethodSignature
+        private void OnSceneGUI(SceneView sceneView)
+        {
+            HandleRaycastForPrefabPlacement();
+        }
+
+        private Vector3 _prefabPlacementPosition;
+        
+        private void HandleRaycastForPrefabPlacement()
+        {
+            Event guiEvent = Event.current;
+
+            if (guiEvent.type == EventType.MouseDown && guiEvent.button == 0)
+            {
+                Ray ray = HandleUtility.GUIPointToWorldRay(guiEvent.mousePosition);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    // Set the prefab placement position based on the raycast hit point
+                    _prefabPlacementPosition = hit.point;
+                }
+
+                guiEvent.Use();
+            }
+        }
+
+        private void SpawnTriggerPrefab(Transform hitTransform)
+        {
+            Instantiate(triggerPrefab, hitTransform.position, hitTransform.rotation, _triggerContainer.transform);
+        }
+
+        private void SpawnWavePrefab(Transform hitTransform)
+        {
+            Instantiate(wavePrefab, hitTransform.position, hitTransform.rotation, _waveContainer.transform);
+        }
+
+        private void SpawnSpawnPointPrefab(Transform hitTransform)
+        {
+            Instantiate(spawnPointPrefab, hitTransform.position, hitTransform.rotation, _spawnContainer.transform);
+        }
+        
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Encounter Editor", EditorStyles.boldLabel);
+
             Encounter encounter = (Encounter)target;
-
-            // Display default inspector property editor
-            DrawDefaultInspector();
-
-            // Add buttons to add triggers and waves
+            
             if (GUILayout.Button("Add Trigger"))
             {
-                if (_triggerContainer == null)
+                encounter.triggerWaves.Add(new Encounter.TriggerWave());
+                EditorUtility.SetDirty(encounter);
+            }
+
+            for (int i = 0; i < _triggerWavesProp.arraySize; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+
+                EditorGUILayout.LabelField("Trigger " + i);
+
+                if (GUILayout.Button("Select", GUILayout.MaxWidth(60)))
                 {
-                    _triggerContainer = new GameObject("TriggerContainer");
-                    _triggerContainer.transform.SetParent(encounter.transform);
+                    _selectedTriggerWaveIndex = i;
                 }
 
-                GameObject newTriggerObject = new GameObject("Trigger");
-                newTriggerObject.transform.SetParent(_triggerContainer.transform);
-                
-                encounter.AddTrigger(newTriggerObject.GetComponent<Trigger>());
-            }
+                EditorGUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Add Wave"))
-            {
-                if (_waveContainer == null)
-                {
-                    _waveContainer = new GameObject("WaveContainer");
-                    _waveContainer.transform.SetParent(encounter.transform);
-                }
-                
-                encounter.AddWave(_waveContainer.GetComponent<Wave>(), _selectedTrigger);
-            }
-
-            // Display triggers
-            EditorGUILayout.LabelField("Triggers");
-            for (int i = 0; i < encounter.triggers.Count; i++)
-            {
-                EditorGUILayout.LabelField($"Trigger {i + 1}");
-                // Display trigger properties
-            }
-
-            // Display waves
-            EditorGUILayout.LabelField("Waves");
-            for (int i = 0; i < encounter.waves.Count; i++)
-            {
-                EditorGUILayout.LabelField($"Wave {i + 1}");
-
-                // Display wave properties
                 EditorGUI.indentLevel++;
-                for (int j = 0; j < encounter.waves[i].spawnPoints.Count; j++)
+
+                if (i == _selectedTriggerWaveIndex)
                 {
-                    EditorGUILayout.LabelField($"Spawn Point {j + 1}");
-                    // Display spawn point properties
+                   //DisplaySpawnPointsControls(wavesProp);
                 }
+
                 EditorGUI.indentLevel--;
             }
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }
